@@ -103,7 +103,10 @@ class _SettingsViewState extends State<SettingsView> {
                 child: SingleChildScrollView(
                   child: SelectableText(
                     jsonStr,
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ),
@@ -143,7 +146,7 @@ class _SettingsViewState extends State<SettingsView> {
           ),
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 84),
               children: [
                 Text(
                   'Preferences & Security',
@@ -156,24 +159,37 @@ class _SettingsViewState extends State<SettingsView> {
                 const SizedBox(height: 6),
                 Text(
                   'Customize appearance, manage reminder notifications, and control device storage.',
-                  style: TextStyle(fontSize: 13, color: AppTheme.muted, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.muted,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 22),
 
                 // Section 1: Appearance & Theme
-                _buildSectionHeader('Appearance & Theme', Icons.palette_outlined),
+                _buildSectionHeader(
+                  'Appearance & Theme',
+                  Icons.palette_outlined,
+                ),
                 const SizedBox(height: 10),
                 _buildAppearanceCard(),
                 const SizedBox(height: 22),
 
                 // Section 2: Notifications & Reminders
-                _buildSectionHeader('Medicine Reminders', Icons.notifications_active_outlined),
+                _buildSectionHeader(
+                  'Medicine Reminders',
+                  Icons.notifications_active_outlined,
+                ),
                 const SizedBox(height: 10),
                 _buildRemindersCard(),
                 const SizedBox(height: 22),
 
                 // Section 3: Data & Privacy
-                _buildSectionHeader('Data & Storage Security', Icons.lock_outline_rounded),
+                _buildSectionHeader(
+                  'Data & Storage Security',
+                  Icons.lock_outline_rounded,
+                ),
                 const SizedBox(height: 10),
                 _buildDataSecurityCard(),
                 const SizedBox(height: 22),
@@ -255,31 +271,39 @@ class _SettingsViewState extends State<SettingsView> {
               style: TextStyle(fontSize: 12, color: AppTheme.muted),
             ),
             const SizedBox(height: 12),
-            SegmentedButton<AppearanceMode>(
-              segments: const [
-                ButtonSegment(
-                  value: AppearanceMode.system,
-                  label: Text('System'),
-                  icon: Icon(Icons.brightness_auto_rounded, size: 16),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 2.1,
+              children: [
+                _buildModeTile(
+                  mode: AppearanceMode.system,
+                  label: 'System',
+                  subtitle: 'Auto match device',
+                  icon: Icons.brightness_auto_rounded,
                 ),
-                ButtonSegment(
-                  value: AppearanceMode.light,
-                  label: Text('Light'),
-                  icon: Icon(Icons.light_mode_rounded, size: 16),
+                _buildModeTile(
+                  mode: AppearanceMode.light,
+                  label: 'Light',
+                  subtitle: 'Day clarity',
+                  icon: Icons.light_mode_rounded,
                 ),
-                ButtonSegment(
-                  value: AppearanceMode.dark,
-                  label: Text('Dark'),
-                  icon: Icon(Icons.dark_mode_rounded, size: 16),
+                _buildModeTile(
+                  mode: AppearanceMode.dark,
+                  label: 'Dark',
+                  subtitle: 'Night ease',
+                  icon: Icons.dark_mode_rounded,
                 ),
-                ButtonSegment(
-                  value: AppearanceMode.nightComfort,
-                  label: Text('Night'),
-                  icon: Icon(Icons.bedtime_rounded, size: 16),
+                _buildModeTile(
+                  mode: AppearanceMode.nightComfort,
+                  label: 'Night Comfort',
+                  subtitle: 'Warm eye rest',
+                  icon: Icons.bedtime_rounded,
                 ),
               ],
-              selected: {_appearance.mode},
-              onSelectionChanged: (set) => _appearance.setMode(set.first),
             ),
             const SizedBox(height: 18),
             const Divider(),
@@ -315,6 +339,75 @@ class _SettingsViewState extends State<SettingsView> {
               }).toList(),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeTile({
+    required AppearanceMode mode,
+    required String label,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    final isSelected = _appearance.mode == mode;
+    return Material(
+      color: isSelected
+          ? AppTheme.teal.withValues(alpha: 0.12)
+          : Theme.of(context).cardColor,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () => _appearance.setMode(mode),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected ? AppTheme.teal : AppTheme.outline,
+              width: isSelected ? 1.8 : 1.0,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? AppTheme.teal : AppTheme.muted,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? AppTheme.teal : AppTheme.ink,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 9.5, color: AppTheme.muted),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: 15,
+                  color: AppTheme.teal,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -360,9 +453,7 @@ class _SettingsViewState extends State<SettingsView> {
             ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ReminderSettingsScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const ReminderSettingsScreen()),
             ),
           ),
         ],
@@ -409,7 +500,11 @@ class _SettingsViewState extends State<SettingsView> {
             const SizedBox(height: 6),
             Text(
               'All family profiles, medications, dose times, and historical records are encrypted and stored solely on your device. CareNest never sells health data.',
-              style: TextStyle(fontSize: 12, color: AppTheme.muted, height: 1.4),
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.muted,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 14),
             OutlinedButton.icon(
@@ -448,9 +543,9 @@ class _SettingsViewState extends State<SettingsView> {
         ),
         trailing: const Icon(Icons.chevron_right_rounded),
         onTap: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-          );
+          await Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
           _checkCloudStatus();
         },
       ),

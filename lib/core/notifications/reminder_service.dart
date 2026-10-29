@@ -65,9 +65,8 @@ class ReminderPlan {
         (json['times'] as List<dynamic>? ?? const [])
             .whereType<Map>()
             .map(
-              (time) => MedicationDoseTime.fromJson(
-                Map<String, dynamic>.from(time),
-              ),
+              (time) =>
+                  MedicationDoseTime.fromJson(Map<String, dynamic>.from(time)),
             )
             .where(
               (time) =>
@@ -180,12 +179,9 @@ class ReminderService extends ChangeNotifier {
       final decoded = rawPlans == null ? null : jsonDecode(rawPlans);
       if (decoded is List) {
         _plans = List.unmodifiable(
-          decoded
-              .whereType<Map>()
-              .map(
-                (item) =>
-                    ReminderPlan.fromJson(Map<String, dynamic>.from(item)),
-              ),
+          decoded.whereType<Map>().map(
+            (item) => ReminderPlan.fromJson(Map<String, dynamic>.from(item)),
+          ),
         );
       }
     } catch (_) {

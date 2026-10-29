@@ -10,20 +10,61 @@ class MedicationSchedule {
   final DateTime startDate;
   final DateTime? endDate;
   final List<MedicationDoseTime> doseTimes;
+  final int? currentStock;
+  final int? refillAlertThreshold;
 
   const MedicationSchedule({
     this.id = '',
     required this.medicineName,
     required this.medicineDosage,
     required this.frequency,
-    required this.foodInstruction,
-    required this.doseAmount,
-    required this.medicineForm,
-    required this.instructions,
+    this.foodInstruction = 'No food instruction',
+    this.doseAmount = '1',
+    this.medicineForm = 'Tablet',
+    this.instructions = '',
     required this.startDate,
     this.endDate,
     required this.doseTimes,
+    this.currentStock,
+    this.refillAlertThreshold,
   });
+
+  bool get hasStockTracking => currentStock != null;
+
+  bool get isLowStock =>
+      currentStock != null &&
+      refillAlertThreshold != null &&
+      currentStock! <= refillAlertThreshold!;
+
+  MedicationSchedule copyWith({
+    String? id,
+    String? medicineName,
+    String? medicineDosage,
+    String? frequency,
+    String? foodInstruction,
+    String? doseAmount,
+    String? medicineForm,
+    String? instructions,
+    DateTime? startDate,
+    DateTime? endDate,
+    List<MedicationDoseTime>? doseTimes,
+    int? currentStock,
+    int? refillAlertThreshold,
+  }) => MedicationSchedule(
+    id: id ?? this.id,
+    medicineName: medicineName ?? this.medicineName,
+    medicineDosage: medicineDosage ?? this.medicineDosage,
+    frequency: frequency ?? this.frequency,
+    foodInstruction: foodInstruction ?? this.foodInstruction,
+    doseAmount: doseAmount ?? this.doseAmount,
+    medicineForm: medicineForm ?? this.medicineForm,
+    instructions: instructions ?? this.instructions,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate ?? this.endDate,
+    doseTimes: doseTimes ?? this.doseTimes,
+    currentStock: currentStock ?? this.currentStock,
+    refillAlertThreshold: refillAlertThreshold ?? this.refillAlertThreshold,
+  );
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -37,6 +78,8 @@ class MedicationSchedule {
     'startDate': startDate.toIso8601String(),
     'endDate': endDate?.toIso8601String(),
     'doseTimes': doseTimes.map((time) => time.toJson()).toList(),
+    'currentStock': currentStock,
+    'refillAlertThreshold': refillAlertThreshold,
   };
 
   static List<MedicationDoseTime> normalizeDoseTimes(
@@ -106,14 +149,16 @@ class MedicationSchedule {
 
   factory MedicationSchedule.fromJson(Map<String, dynamic> json) {
     final name = (json['medicineName'] ?? json['name']) as String? ?? '';
-    final startDateStr = json['startDate'] ??
+    final startDateStr =
+        json['startDate'] ??
         json['start_date'] ??
         (json['schedule'] is Map ? json['schedule']['start_date'] : null);
     final startDate = DateTime.tryParse(startDateStr as String? ?? '');
     if (name.trim().isEmpty || startDate == null) {
       throw const FormatException('Invalid medication schedule.');
     }
-    final endDateStr = json['endDate'] ??
+    final endDateStr =
+        json['endDate'] ??
         json['end_date'] ??
         (json['schedule'] is Map ? json['schedule']['end_date'] : null);
     final parsedEnd = endDateStr is String
@@ -123,11 +168,15 @@ class MedicationSchedule {
       throw const FormatException('Invalid treatment end date.');
     }
     final stableId = json['id'] as String?;
-    final frequency = (json['frequency'] ??
-            (json['schedule'] is Map ? json['schedule']['frequency'] : null))
-        as String? ??
+    final frequency =
+        (json['frequency'] ??
+                (json['schedule'] is Map
+                    ? json['schedule']['frequency']
+                    : null))
+            as String? ??
         'Once daily';
-    final rawTimes = json['doseTimes'] ??
+    final rawTimes =
+        json['doseTimes'] ??
         json['dose_times'] ??
         (json['schedule'] is Map ? json['schedule']['dose_times'] : null);
 
@@ -160,15 +209,16 @@ class MedicationSchedule {
       frequency: frequency,
       foodInstruction:
           (json['foodInstruction'] ?? json['food_instruction']) as String? ??
-              'No food instruction',
-      doseAmount:
-          (json['doseAmount'] ?? json['dose_amount']) as String? ?? '',
+          'No food instruction',
+      doseAmount: (json['doseAmount'] ?? json['dose_amount']) as String? ?? '',
       medicineForm:
           (json['medicineForm'] ?? json['form']) as String? ?? 'Other',
       instructions: json['instructions'] as String? ?? '',
       startDate: startDate,
       endDate: parsedEnd,
       doseTimes: normalizedTimes,
+      currentStock: (json['currentStock'] as num?)?.toInt(),
+      refillAlertThreshold: (json['refillAlertThreshold'] as num?)?.toInt(),
     );
   }
 }

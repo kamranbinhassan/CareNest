@@ -287,9 +287,65 @@ class CareSession extends ChangeNotifier {
     _changed();
   }
 
+  void updateFamilyName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isNotEmpty) {
+      familyName = trimmed;
+      _changed();
+    }
+  }
+
   void createFamily({required String name}) {
     familyName = name.trim();
     _changed();
+  }
+
+  String? _activeMemberId;
+  String? get activeMemberId => _activeMemberId;
+  void setActiveMember(String? memberId) {
+    if (memberId == null || _members.any((m) => m.id == memberId)) {
+      _activeMemberId = memberId;
+      notifyListeners();
+    }
+  }
+
+  FamilyMember getOrCreateOwnerMember({String? name}) {
+    final existing = _members
+        .where(
+          (m) =>
+              m.relationship == 'Myself' ||
+              m.relationship == 'Self' ||
+              (ownerName.isNotEmpty && m.name == ownerName),
+        )
+        .firstOrNull;
+    if (existing != null) {
+      if (name != null &&
+          name.trim().isNotEmpty &&
+          existing.name != name.trim()) {
+        updateMember(
+          memberId: existing.id,
+          name: name.trim(),
+          relationship: existing.relationship,
+        );
+      }
+      _activeMemberId ??= existing.id;
+      return existing;
+    }
+
+    final ownerDisplayName = name?.trim().isNotEmpty == true
+        ? name!.trim()
+        : (ownerName.trim().isNotEmpty ? ownerName.trim() : 'Myself');
+
+    final member = FamilyMember(
+      id: 'owner_${DateTime.now().millisecondsSinceEpoch}',
+      name: ownerDisplayName,
+      relationship: 'Myself',
+    );
+    _members.add(member);
+    _medicines[member.id] = [];
+    _activeMemberId ??= member.id;
+    _changed();
+    return member;
   }
 
   FamilyMember addMember({required String name, required String relationship}) {
@@ -300,8 +356,25 @@ class CareSession extends ChangeNotifier {
     );
     _members.add(member);
     _medicines[member.id] = [];
+    _activeMemberId ??= member.id;
     _changed();
     return member;
+  }
+
+  void updateMember({
+    required String memberId,
+    required String name,
+    required String relationship,
+  }) {
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index >= 0) {
+      _members[index] = FamilyMember(
+        id: memberId,
+        name: name.trim(),
+        relationship: relationship.trim(),
+      );
+      _changed();
+    }
   }
 
   void removeMember(String memberId) {
@@ -309,6 +382,9 @@ class CareSession extends ChangeNotifier {
     _members.removeWhere((member) => member.id == memberId);
     _medicines.remove(memberId);
     _doseEvents.removeWhere((event) => event.memberId == memberId);
+    if (_activeMemberId == memberId) {
+      _activeMemberId = _members.firstOrNull?.id;
+    }
     _changed();
   }
 
@@ -332,6 +408,25 @@ class CareSession extends ChangeNotifier {
     _changed();
   }
 
+  void updateMedicineStock(
+    String memberId,
+    String medicineId,
+    int newStock, {
+    int? refillThreshold,
+  }) {
+    final list = _medicines[memberId];
+    if (list == null) return;
+    final index = list.indexWhere((m) => m.id == medicineId);
+    if (index >= 0) {
+      list[index] = list[index].copyWith(
+        currentStock: newStock,
+        refillAlertThreshold:
+            refillThreshold ?? list[index].refillAlertThreshold,
+      );
+      _changed();
+    }
+  }
+
   MedicationSchedule _withId(MedicationSchedule medicine, String id) =>
       MedicationSchedule(
         id: id,
@@ -345,6 +440,8 @@ class CareSession extends ChangeNotifier {
         startDate: medicine.startDate,
         endDate: medicine.endDate,
         doseTimes: medicine.doseTimes,
+        currentStock: medicine.currentStock,
+        refillAlertThreshold: medicine.refillAlertThreshold,
       );
 
   bool recordDose({
@@ -376,6 +473,26 @@ class CareSession extends ChangeNotifier {
     } else {
       _doseEvents[existingIndex] = event;
     }
+
+    // Auto-decrement tracked stock when marking dose taken
+    if (status == DoseStatus.taken &&
+        (previous == null || previous.status != DoseStatus.taken)) {
+      if (medicine.currentStock != null && medicine.currentStock! > 0) {
+        final amount =
+            (double.tryParse(medicine.doseAmount.split(' ').first) ?? 1.0)
+                .toInt()
+                .clamp(1, 99);
+        final newStock = (medicine.currentStock! - amount).clamp(0, 99999);
+        final list = _medicines[memberId];
+        if (list != null) {
+          final medIndex = list.indexWhere((m) => m.id == medicine.id);
+          if (medIndex >= 0) {
+            list[medIndex] = list[medIndex].copyWith(currentStock: newStock);
+          }
+        }
+      }
+    }
+
     _changed();
     return true;
   }
@@ -396,6 +513,29 @@ class CareSession extends ChangeNotifier {
     required DoseEvent? previousEvent,
   }) {
     final id = _occurrenceId(memberId, medicineId, scheduledAt);
+    final current = _doseEvents.where((event) => event.id == id).firstOrNull;
+
+    // Restore stock if undoing a taken dose
+    if (current?.status == DoseStatus.taken &&
+        previousEvent?.status != DoseStatus.taken) {
+      final medicine = medicineById(memberId, medicineId);
+      if (medicine != null && medicine.currentStock != null) {
+        final amount =
+            (double.tryParse(medicine.doseAmount.split(' ').first) ?? 1.0)
+                .toInt()
+                .clamp(1, 99);
+        final list = _medicines[memberId];
+        if (list != null) {
+          final medIndex = list.indexWhere((m) => m.id == medicine.id);
+          if (medIndex >= 0) {
+            list[medIndex] = list[medIndex].copyWith(
+              currentStock: medicine.currentStock! + amount,
+            );
+          }
+        }
+      }
+    }
+
     _doseEvents.removeWhere((event) => event.id == id);
     if (previousEvent != null) _doseEvents.add(previousEvent);
     _changed();

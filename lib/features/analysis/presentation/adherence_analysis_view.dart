@@ -52,17 +52,18 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
             ? members
             : members.where((m) => m.id == _memberId).toList();
 
-        final occurrences = targetMembers
-            .expand(
-              (m) => session.occurrencesFor(
-                memberId: m.id,
-                from: from,
-                through: today,
-                now: now,
-              ),
-            )
-            .toList()
-          ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+        final occurrences =
+            targetMembers
+                .expand(
+                  (m) => session.occurrencesFor(
+                    memberId: m.id,
+                    from: from,
+                    through: today,
+                    now: now,
+                  ),
+                )
+                .toList()
+              ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
 
         final periodSummary = DoseSummary.from(occurrences);
 
@@ -99,7 +100,7 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
           ),
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 84),
               children: [
                 Text(
                   'Adherence Overview',
@@ -112,7 +113,11 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
                 const SizedBox(height: 6),
                 Text(
                   'Review consistency and completed doses based on actual recorded events.',
-                  style: TextStyle(fontSize: 13, color: AppTheme.muted, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.muted,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 18),
 
@@ -130,6 +135,10 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
 
                 // Medicine breakdown
                 _buildMedicineBreakdown(medicineOccurrences),
+                const SizedBox(height: 22),
+
+                // Medication history timeline
+                _buildHistoryTimeline(),
               ],
             ),
           ),
@@ -148,7 +157,10 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
                 initialValue: _memberId,
                 decoration: const InputDecoration(
                   labelText: 'Family member',
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
                 items: [
                   const DropdownMenuItem<String?>(
@@ -171,7 +183,10 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
                 initialValue: _rangeDays,
                 decoration: const InputDecoration(
                   labelText: 'Timeframe',
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
                 items: const [
                   DropdownMenuItem(value: 1, child: Text('Today')),
@@ -228,7 +243,10 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.paleTeal,
                     borderRadius: BorderRadius.circular(16),
@@ -375,7 +393,10 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
                             _rangeDays <= 7
                                 ? _weekday(dayDate.weekday)
                                 : _formatShortDate(dayDate),
-                            style: TextStyle(fontSize: 9, color: AppTheme.muted),
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: AppTheme.muted,
+                            ),
                           ),
                         ],
                       ),
@@ -470,7 +491,10 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
                                 const SizedBox(height: 2),
                                 Text(
                                   '${med.medicineDosage} · ${med.frequency}${member != null ? ' · For ${member.name}' : ''}',
-                                  style: TextStyle(fontSize: 11, color: AppTheme.muted),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.muted,
+                                  ),
                                 ),
                               ],
                             ),
@@ -507,5 +531,179 @@ class _AdherenceAnalysisViewState extends State<AdherenceAnalysisView> {
           }),
       ],
     );
+  }
+
+  Widget _buildHistoryTimeline() {
+    final session = CareSession.instance;
+    var events = session.doseEvents.toList();
+    if (_memberId != null) {
+      events = events.where((e) => e.memberId == _memberId).toList();
+    }
+    events.sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.history_rounded, size: 18, color: AppTheme.teal),
+            const SizedBox(width: 8),
+            Text(
+              'Medication History Timeline',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.ink,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Chronological log of verified dose events and recorded timestamps.',
+          style: TextStyle(fontSize: 12, color: AppTheme.muted),
+        ),
+        const SizedBox(height: 12),
+        if (events.isEmpty)
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: AppTheme.outline),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.event_note_outlined,
+                      size: 32,
+                      color: AppTheme.muted,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No recorded dose history yet',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'When you mark doses as Taken or Missed, an immutable log will appear here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: AppTheme.muted),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(color: AppTheme.outline),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: events.length.clamp(0, 20),
+              separatorBuilder: (_, __) => const Divider(height: 1, indent: 56),
+              itemBuilder: (context, idx) {
+                final event = events[idx];
+                final isTaken = event.status == DoseStatus.taken;
+                final member = session.members
+                    .where((m) => m.id == event.memberId)
+                    .firstOrNull;
+                final memberName = member?.name ?? 'Family member';
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isTaken
+                              ? AppTheme.teal.withValues(alpha: 0.12)
+                              : AppTheme.statusError.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isTaken
+                              ? Icons.check_circle_rounded
+                              : Icons.cancel_rounded,
+                          color: isTaken ? AppTheme.teal : AppTheme.statusError,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.medicineName,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.ink,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'For $memberName · Scheduled: ${_formatDate(event.scheduledAt)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppTheme.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isTaken
+                              ? AppTheme.teal.withValues(alpha: 0.1)
+                              : AppTheme.statusError.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          isTaken ? 'Taken' : 'Missed',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isTaken
+                                ? AppTheme.teal
+                                : AppTheme.statusError,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime dt) {
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '${dt.day}/${dt.month} $hour:$minute $ampm';
   }
 }

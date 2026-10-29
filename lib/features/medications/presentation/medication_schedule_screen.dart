@@ -60,6 +60,8 @@ class _MedicationScheduleScreenState extends State<MedicationScheduleScreen> {
 
   final _instructionsController = TextEditingController();
   final _doseAmountController = TextEditingController();
+  final _stockController = TextEditingController();
+  final _refillController = TextEditingController();
 
   String _frequency = 'Once daily';
   String _foodInstruction = 'No food instruction';
@@ -85,6 +87,12 @@ class _MedicationScheduleScreenState extends State<MedicationScheduleScreen> {
       _foodInstruction = initial.foodInstruction;
       _instructionsController.text = initial.instructions;
       _doseAmountController.text = initial.doseAmount;
+      if (initial.currentStock != null) {
+        _stockController.text = initial.currentStock.toString();
+      }
+      if (initial.refillAlertThreshold != null) {
+        _refillController.text = initial.refillAlertThreshold.toString();
+      }
       _startDate = initial.startDate;
       _endDate = initial.endDate;
       _doseTimes.clear();
@@ -276,6 +284,8 @@ class _MedicationScheduleScreenState extends State<MedicationScheduleScreen> {
             (time) => MedicationDoseTime(hour: time.hour, minute: time.minute),
           )
           .toList(),
+      currentStock: int.tryParse(_stockController.text.trim()),
+      refillAlertThreshold: int.tryParse(_refillController.text.trim()),
     );
 
     setState(() => _isSaving = true);
@@ -294,6 +304,8 @@ class _MedicationScheduleScreenState extends State<MedicationScheduleScreen> {
   void dispose() {
     _instructionsController.dispose();
     _doseAmountController.dispose();
+    _stockController.dispose();
+    _refillController.dispose();
     super.dispose();
   }
 
@@ -419,6 +431,36 @@ class _MedicationScheduleScreenState extends State<MedicationScheduleScreen> {
                   hintText: 'e.g. 1',
                   border: OutlineInputBorder(),
                 ),
+              ),
+
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _stockController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Stock (Optional)',
+                        hintText: 'e.g. 30',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _refillController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Refill Alert At',
+                        hintText: 'e.g. 5',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               Card(

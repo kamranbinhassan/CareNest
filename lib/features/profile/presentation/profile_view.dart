@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../members/presentation/member_health_screen.dart';
 import '../../onboarding/presentation/add_family_member_screen.dart';
 import '../../onboarding/presentation/login_screen.dart';
+import '../../support/presentation/care_support_screen.dart';
 
 class ProfileView extends StatefulWidget {
   final void Function(int tabIndex)? onNavigateToTab;
@@ -70,7 +71,10 @@ class _ProfileViewState extends State<ProfileView> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
-        content: Text(content, style: const TextStyle(fontSize: 13, height: 1.4)),
+        content: Text(
+          content,
+          style: const TextStyle(fontSize: 13, height: 1.4),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -104,10 +108,16 @@ class _ProfileViewState extends State<ProfileView> {
           ),
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 84),
               children: [
                 // Profile Header Card
-                _buildCaregiverCard(caregiverName, initial, membersCount, medicineCount, historyCount),
+                _buildCaregiverCard(
+                  caregiverName,
+                  initial,
+                  membersCount,
+                  medicineCount,
+                  historyCount,
+                ),
                 const SizedBox(height: 20),
 
                 // Family space management
@@ -123,13 +133,19 @@ class _ProfileViewState extends State<ProfileView> {
                 const SizedBox(height: 22),
 
                 // Future-ready roadmap (clearly framed)
-                _buildSectionHeader('CareNest Roadmap & Labs', Icons.rocket_launch_outlined),
+                _buildSectionHeader(
+                  'CareNest Roadmap & Labs',
+                  Icons.rocket_launch_outlined,
+                ),
                 const SizedBox(height: 10),
                 _buildRoadmapCard(),
                 const SizedBox(height: 22),
 
                 // Help & About
-                _buildSectionHeader('Support & Principles', Icons.help_outline_rounded),
+                _buildSectionHeader(
+                  'Support & Principles',
+                  Icons.help_outline_rounded,
+                ),
                 const SizedBox(height: 10),
                 _buildSupportCard(),
               ],
@@ -293,7 +309,8 @@ class _ProfileViewState extends State<ProfileView> {
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => const AddFamilyMemberScreen(returnToCaller: true),
+                builder: (_) =>
+                    const AddFamilyMemberScreen(returnToCaller: true),
               ),
             ),
           ),
@@ -359,14 +376,18 @@ class _ProfileViewState extends State<ProfileView> {
             Row(
               children: [
                 Icon(
-                  isConnected ? Icons.cloud_done_rounded : Icons.offline_pin_rounded,
+                  isConnected
+                      ? Icons.cloud_done_rounded
+                      : Icons.offline_pin_rounded,
                   color: isConnected ? AppTheme.teal : AppTheme.muted,
                   size: 20,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    isConnected ? 'CareNest Account Active' : 'Offline Device Mode',
+                    isConnected
+                        ? 'CareNest Account Active'
+                        : 'Offline Device Mode',
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
@@ -381,7 +402,11 @@ class _ProfileViewState extends State<ProfileView> {
               isConnected
                   ? 'Your family data synchronizes with your configured CareNest server.'
                   : 'You are currently using local storage. Sign in if you want to sync with a remote family server.',
-              style: TextStyle(fontSize: 12, color: AppTheme.muted, height: 1.4),
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.muted,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 12),
             if (isConnected)
@@ -391,7 +416,9 @@ class _ProfileViewState extends State<ProfileView> {
                   await _checkCloud();
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Logged out of cloud account.')),
+                      const SnackBar(
+                        content: Text('Logged out of cloud account.'),
+                      ),
                     );
                   }
                 },
@@ -430,7 +457,10 @@ class _ProfileViewState extends State<ProfileView> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.paleTeal,
                     borderRadius: BorderRadius.circular(8),
@@ -450,7 +480,11 @@ class _ProfileViewState extends State<ProfileView> {
             const SizedBox(height: 10),
             Text(
               'The following capabilities are in design phase for upcoming CareNest releases:',
-              style: TextStyle(fontSize: 12, color: AppTheme.muted, height: 1.4),
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.muted,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 14),
             _buildRoadmapTile(
@@ -495,7 +529,11 @@ class _ProfileViewState extends State<ProfileView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.radio_button_unchecked_rounded, size: 16, color: AppTheme.teal),
+          Icon(
+            Icons.radio_button_unchecked_rounded,
+            size: 16,
+            color: AppTheme.teal,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -513,7 +551,10 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.outline.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(6),
@@ -552,9 +593,31 @@ class _ProfileViewState extends State<ProfileView> {
       child: Column(
         children: [
           ListTile(
+            leading: Icon(Icons.support_agent_rounded, color: AppTheme.teal),
+            title: const Text(
+              'Help Guides & Diagnostics',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+            subtitle: const Text(
+              'Troubleshooting, alarm setup & diagnostics report',
+              style: TextStyle(fontSize: 12),
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CareSupportScreen()),
+            ),
+          ),
+          const Divider(height: 1),
+          ListTile(
             leading: Icon(Icons.info_outline_rounded, color: AppTheme.teal),
-            title: const Text('About CareNest', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-            subtitle: const Text('Family-centered medicine adherence companion', style: TextStyle(fontSize: 12)),
+            title: const Text(
+              'About CareNest',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+            subtitle: const Text(
+              'Family-centered medicine adherence companion',
+              style: TextStyle(fontSize: 12),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showInfoDialog(
               'About CareNest',
@@ -564,8 +627,14 @@ class _ProfileViewState extends State<ProfileView> {
           const Divider(height: 1),
           ListTile(
             leading: Icon(Icons.privacy_tip_outlined, color: AppTheme.teal),
-            title: const Text('Privacy Principles', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-            subtitle: const Text('Zero telemetry · Strict on-device encryption', style: TextStyle(fontSize: 12)),
+            title: const Text(
+              'Privacy Principles',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+            subtitle: const Text(
+              'Zero telemetry · Strict on-device encryption',
+              style: TextStyle(fontSize: 12),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showInfoDialog(
               'Privacy Principles',
@@ -575,8 +644,14 @@ class _ProfileViewState extends State<ProfileView> {
           const Divider(height: 1),
           ListTile(
             leading: Icon(Icons.help_center_outlined, color: AppTheme.teal),
-            title: const Text('Scheduling & Offline Help', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-            subtitle: const Text('How multiple dose times and alarms work', style: TextStyle(fontSize: 12)),
+            title: const Text(
+              'Scheduling & Offline Help',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+            subtitle: const Text(
+              'How multiple dose times and alarms work',
+              style: TextStyle(fontSize: 12),
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => _showInfoDialog(
               'Scheduling & Offline Help',

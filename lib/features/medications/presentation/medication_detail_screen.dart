@@ -46,17 +46,17 @@ class MedicationDetailScreen extends StatelessWidget {
             IconButton(
               tooltip: 'Edit schedule',
               onPressed: () async {
-                final updated =
-                    await Navigator.of(context).push<MedicationSchedule>(
-                  MaterialPageRoute(
-                    builder: (_) => MedicationScheduleScreen(
-                      medicineName: medicine.medicineName,
-                      medicineDosage: medicine.medicineDosage,
-                      medicineForm: medicine.medicineForm,
-                      initialSchedule: medicine,
-                    ),
-                  ),
-                );
+                final updated = await Navigator.of(context)
+                    .push<MedicationSchedule>(
+                      MaterialPageRoute(
+                        builder: (_) => MedicationScheduleScreen(
+                          medicineName: medicine.medicineName,
+                          medicineDosage: medicine.medicineDosage,
+                          medicineForm: medicine.medicineForm,
+                          initialSchedule: medicine,
+                        ),
+                      ),
+                    );
                 if (updated != null && context.mounted) {
                   session.addMedicine(memberId, updated);
                   await session.flush();

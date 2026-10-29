@@ -14,10 +14,11 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
 
-  String _relationship = 'Grandparent';
+  String _relationship = 'Parent';
   bool _isSaving = false;
 
   final List<String> _relationships = [
+    'Myself',
     'Parent',
     'Grandparent',
     'Spouse',
@@ -32,6 +33,16 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     super.dispose();
   }
 
+  Future<void> _skipToDashboard() async {
+    CareSession.instance.getOrCreateOwnerMember();
+    await CareSession.instance.flush();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const FamilyHomeScreen()),
+      (route) => false,
+    );
+  }
+
   Future<void> _addMember() async {
     if (_isSaving || !_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
@@ -39,6 +50,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       name: _nameController.text,
       relationship: _relationship,
     );
+    CareSession.instance.setActiveMember(member.id);
     await CareSession.instance.flush();
     if (!mounted) return;
     if (widget.returnToCaller) {
@@ -54,7 +66,13 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add family member')),
+      appBar: AppBar(
+        title: const Text('Add family member'),
+        actions: [
+          if (!widget.returnToCaller)
+            TextButton(onPressed: _skipToDashboard, child: const Text('Skip')),
+        ],
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -132,6 +150,19 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                   ),
                 ),
               ),
+
+              if (!widget.returnToCaller) ...[
+                const SizedBox(height: 14),
+                Center(
+                  child: TextButton(
+                    onPressed: _skipToDashboard,
+                    child: const Text(
+                      'Skip for now and go to dashboard',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

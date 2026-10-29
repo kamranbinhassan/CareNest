@@ -11,10 +11,7 @@ import '../../onboarding/presentation/add_family_member_screen.dart';
 class HomeDashboardView extends StatefulWidget {
   final void Function(int tabIndex) onNavigateToTab;
 
-  const HomeDashboardView({
-    super.key,
-    required this.onNavigateToTab,
-  });
+  const HomeDashboardView({super.key, required this.onNavigateToTab});
 
   @override
   State<HomeDashboardView> createState() => _HomeDashboardViewState();
@@ -103,17 +100,18 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
             ? members
             : members.where((m) => m.id == _selectedMemberId).toList();
 
-        final todayDoses = targetMembers
-            .expand(
-              (m) => session.occurrencesFor(
-                memberId: m.id,
-                from: today,
-                through: today,
-                now: now,
-              ),
-            )
-            .toList()
-          ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+        final todayDoses =
+            targetMembers
+                .expand(
+                  (m) => session.occurrencesFor(
+                    memberId: m.id,
+                    from: today,
+                    through: today,
+                    now: now,
+                  ),
+                )
+                .toList()
+              ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
         final summary = DoseSummary.from(todayDoses);
 
@@ -141,7 +139,7 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
         return Scaffold(
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 84),
               children: [
                 // Header
                 _buildHeader(caregiverName, overdueCount),
@@ -265,22 +263,22 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
       children: [
         Row(
           children: [
-            Text(
-              'Family Members',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.ink,
+            Expanded(
+              child: Text(
+                'Family Members',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.ink,
+                ),
               ),
             ),
-            const Spacer(),
             TextButton.icon(
               onPressed: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const AddFamilyMemberScreen(
-                      returnToCaller: true,
-                    ),
+                    builder: (_) =>
+                        const AddFamilyMemberScreen(returnToCaller: true),
                   ),
                 );
               },
@@ -327,7 +325,9 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
                 ),
                 ...members.map((m) {
                   final isSelected = _selectedMemberId == m.id;
-                  final initial = m.name.isNotEmpty ? m.name[0].toUpperCase() : '?';
+                  final initial = m.name.isNotEmpty
+                      ? m.name[0].toUpperCase()
+                      : '?';
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -346,7 +346,8 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
                       ),
                       label: Text(m.name),
                       selected: isSelected,
-                      onSelected: (_) => setState(() => _selectedMemberId = m.id),
+                      onSelected: (_) =>
+                          setState(() => _selectedMemberId = m.id),
                     ),
                   );
                 }),
@@ -375,38 +376,53 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
           children: [
             Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Today’s Adherence',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.ink,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Today’s Adherence',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.ink,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${summary.taken} of $totalScheduled scheduled doses completed',
-                      style: TextStyle(fontSize: 12, color: AppTheme.muted),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.paleTeal,
-                    borderRadius: BorderRadius.circular(14),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${summary.taken} of $totalScheduled scheduled doses completed',
+                        style: TextStyle(fontSize: 12, color: AppTheme.muted),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    adherenceText,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.teal,
-                    ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 54,
+                  height: 54,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: 1.0,
+                        strokeWidth: 5,
+                        color: AppTheme.outline.withValues(alpha: 0.5),
+                      ),
+                      CircularProgressIndicator(
+                        value: ratio.clamp(0.0, 1.0),
+                        strokeWidth: 5,
+                        strokeCap: StrokeCap.round,
+                        color: AppTheme.teal,
+                      ),
+                      Text(
+                        adherenceText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.teal,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -426,12 +442,20 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
               children: [
                 _buildStatPill('Taken', summary.taken, AppTheme.teal),
                 const SizedBox(width: 8),
-                _buildStatPill('Pending', summary.upcoming, AppTheme.statusInfo),
+                _buildStatPill(
+                  'Pending',
+                  summary.upcoming,
+                  AppTheme.statusInfo,
+                ),
                 const SizedBox(width: 8),
                 _buildStatPill('Missed', summary.missed, AppTheme.statusError),
                 if (summary.overdue > 0) ...[
                   const SizedBox(width: 8),
-                  _buildStatPill('Overdue', summary.overdue, AppTheme.statusWarning),
+                  _buildStatPill(
+                    'Overdue',
+                    summary.overdue,
+                    AppTheme.statusWarning,
+                  ),
                 ],
               ],
             ),
@@ -507,7 +531,10 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -515,7 +542,11 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.access_time_filled, color: Colors.white, size: 14),
+                      const Icon(
+                        Icons.access_time_filled,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                       const SizedBox(width: 5),
                       Text(
                         'NEXT DOSE · ${_timeRemaining(nextDose.scheduledAt).toUpperCase()}',
@@ -592,7 +623,8 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
       );
     }
 
-    final allTaken = todayDoses.isNotEmpty &&
+    final allTaken =
+        todayDoses.isNotEmpty &&
         todayDoses.every((d) => d.status == OccurrenceStatus.taken);
 
     return Card(
@@ -672,7 +704,8 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
                 title: 'Add Medicine',
                 subtitle: 'Prescription & times',
                 onTap: () {
-                  final target = _selectedMemberId ?? session.members.firstOrNull?.id;
+                  final target =
+                      _selectedMemberId ?? session.members.firstOrNull?.id;
                   if (target != null) {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -682,9 +715,8 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
                   } else {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => const AddFamilyMemberScreen(
-                          returnToCaller: true,
-                        ),
+                        builder: (_) =>
+                            const AddFamilyMemberScreen(returnToCaller: true),
                       ),
                     );
                   }
@@ -721,9 +753,8 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
                   } else {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => const AddFamilyMemberScreen(
-                          returnToCaller: true,
-                        ),
+                        builder: (_) =>
+                            const AddFamilyMemberScreen(returnToCaller: true),
                       ),
                     );
                   }
@@ -864,7 +895,8 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
   Widget _buildDoseItem(DoseOccurrence dose) {
     final statusColor = switch (dose.status) {
       OccurrenceStatus.taken => AppTheme.teal,
-      OccurrenceStatus.missed || OccurrenceStatus.overdue => AppTheme.statusError,
+      OccurrenceStatus.missed ||
+      OccurrenceStatus.overdue => AppTheme.statusError,
       _ => AppTheme.statusInfo,
     };
 
@@ -965,6 +997,37 @@ class _HomeDashboardViewState extends State<HomeDashboardView> {
                         '${_formatTime(dose.scheduledAt)} · Dose: ${dose.medicine.doseAmount}${dose.medicine.foodInstruction != 'No food instruction' ? ' · ${dose.medicine.foodInstruction}' : ''}${member != null ? ' · For ${member.name}' : ''}',
                         style: TextStyle(fontSize: 12, color: AppTheme.muted),
                       ),
+                      if (dose.medicine.hasStockTracking) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              dose.medicine.isLowStock
+                                  ? Icons.warning_amber_rounded
+                                  : Icons.inventory_2_outlined,
+                              size: 13,
+                              color: dose.medicine.isLowStock
+                                  ? AppTheme.statusWarning
+                                  : AppTheme.muted,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              dose.medicine.isLowStock
+                                  ? 'Refill Needed (${dose.medicine.currentStock} left)'
+                                  : '${dose.medicine.currentStock} remaining in stock',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: dose.medicine.isLowStock
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: dose.medicine.isLowStock
+                                    ? AppTheme.statusWarning
+                                    : AppTheme.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

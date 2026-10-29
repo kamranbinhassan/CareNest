@@ -9,7 +9,7 @@ import 'package:medicine_adherence_monitoring/core/network/api_client.dart';
 void main() {
   test('physical-device default points to the configured Kali LAN server', () {
     final uri = Uri.parse(physicalDeviceApiBaseUrl);
-    expect(uri.host, '172.20.10.2');
+    expect(uri.host, '10.27.120.70');
     expect(uri.port, 8000);
     expect(uri.path, '/api/v1');
   });
@@ -43,7 +43,7 @@ void main() {
       expect(request.method, 'POST');
       expect(
         request.url.toString(),
-        'http://172.20.10.2:8000/api/v1/auth/register',
+        'http://10.27.120.70:8000/api/v1/auth/register',
       );
       expect(request.headers['content-type'], 'application/json');
       expect(jsonDecode(request.body), {
@@ -71,7 +71,7 @@ void main() {
         isA<ApiException>().having(
           (error) => error.message,
           'message',
-          contains('172.20.10.2:8000'),
+          contains('10.27.120.70:8000'),
         ),
       ),
     );

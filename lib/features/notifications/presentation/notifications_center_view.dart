@@ -14,7 +14,8 @@ class NotificationsCenterView extends StatefulWidget {
   const NotificationsCenterView({super.key});
 
   @override
-  State<NotificationsCenterView> createState() => _NotificationsCenterViewState();
+  State<NotificationsCenterView> createState() =>
+      _NotificationsCenterViewState();
 }
 
 class _NotificationsCenterViewState extends State<NotificationsCenterView> {
@@ -55,17 +56,13 @@ class _NotificationsCenterViewState extends State<NotificationsCenterView> {
       await _reminderService.sendTestNotification();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Test notification sent successfully.'),
-          ),
+          const SnackBar(content: Text('Test notification sent successfully.')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Bad state: ', '')),
-          ),
+          SnackBar(content: Text(e.toString().replaceFirst('Bad state: ', ''))),
         );
       }
     } finally {
@@ -133,11 +130,13 @@ class _NotificationsCenterViewState extends State<NotificationsCenterView> {
             )
             .toList();
 
-        final alerts = todayOccurrences.where(
-          (o) =>
-              o.status == OccurrenceStatus.missed ||
-              o.status == OccurrenceStatus.overdue,
-        ).toList();
+        final alerts = todayOccurrences
+            .where(
+              (o) =>
+                  o.status == OccurrenceStatus.missed ||
+                  o.status == OccurrenceStatus.overdue,
+            )
+            .toList();
 
         final isPermissionBlocked = _reminderService.permissionGranted == false;
         final isRemindersDisabled = !_reminderService.enabled;
@@ -160,7 +159,7 @@ class _NotificationsCenterViewState extends State<NotificationsCenterView> {
           ),
           body: SafeArea(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 84),
               children: [
                 // Service status banner
                 if (isPermissionBlocked || isRemindersDisabled)
@@ -241,7 +240,8 @@ class _NotificationsCenterViewState extends State<NotificationsCenterView> {
                     ),
                   ],
                   selected: {_filter},
-                  onSelectionChanged: (set) => setState(() => _filter = set.first),
+                  onSelectionChanged: (set) =>
+                      setState(() => _filter = set.first),
                 ),
                 const SizedBox(height: 18),
 
@@ -258,14 +258,17 @@ class _NotificationsCenterViewState extends State<NotificationsCenterView> {
 
                 if (_filter == NotificationFilter.all ||
                     _filter == NotificationFilter.upcoming) ...[
-                  _buildSectionHeader('Scheduled Reminders', upcomingPlans.length),
+                  _buildSectionHeader(
+                    'Scheduled Reminders',
+                    upcomingPlans.length,
+                  ),
                   const SizedBox(height: 8),
                   if (upcomingPlans.isEmpty)
                     _buildEmptyUpcomingCard()
                   else
-                    ...upcomingPlans.take(30).map(
-                          (entry) => _buildReminderItem(entry),
-                        ),
+                    ...upcomingPlans
+                        .take(30)
+                        .map((entry) => _buildReminderItem(entry)),
                 ],
 
                 if (_filter == NotificationFilter.alerts && alerts.isEmpty)
@@ -323,11 +326,12 @@ class _NotificationsCenterViewState extends State<NotificationsCenterView> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ReminderSettingsScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const ReminderSettingsScreen()),
             ),
-            child: const Text('Fix', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Fix',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),

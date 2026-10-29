@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../medications/domain/models/medication_schedule.dart';
 import 'adherence_screen.dart';
 import '../../medications/presentation/treatment_screen.dart';
+import '../../support/presentation/care_support_screen.dart';
 
 class MemberHealthScreen extends StatelessWidget {
   final String memberId;
@@ -22,6 +23,102 @@ class MemberHealthScreen extends StatelessWidget {
       animation: CareSession.instance,
       builder: (context, _) => _buildScreen(context),
     );
+  }
+
+  Future<void> _showEditMemberDialog(
+    BuildContext context,
+    String currentName,
+    String currentRelationship,
+  ) async {
+    final nameController = TextEditingController(text: currentName);
+    String selectedRelationship = currentRelationship;
+    final formKey = GlobalKey<FormState>();
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Edit Member Profile'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Name cannot be empty'
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue:
+                      [
+                        'Myself',
+                        'Parent',
+                        'Grandparent',
+                        'Spouse',
+                        'Child',
+                        'Sibling',
+                        'Other',
+                      ].contains(selectedRelationship)
+                      ? selectedRelationship
+                      : 'Other',
+                  decoration: const InputDecoration(
+                    labelText: 'Relationship',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Myself', child: Text('Myself')),
+                    DropdownMenuItem(value: 'Parent', child: Text('Parent')),
+                    DropdownMenuItem(
+                      value: 'Grandparent',
+                      child: Text('Grandparent'),
+                    ),
+                    DropdownMenuItem(value: 'Spouse', child: Text('Spouse')),
+                    DropdownMenuItem(value: 'Child', child: Text('Child')),
+                    DropdownMenuItem(value: 'Sibling', child: Text('Sibling')),
+                    DropdownMenuItem(value: 'Other', child: Text('Other')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setDialogState(() => selectedRelationship = val);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  CareSession.instance.updateMember(
+                    memberId: memberId,
+                    name: nameController.text.trim(),
+                    relationship: selectedRelationship,
+                  );
+                  Navigator.pop(ctx, true);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved == true) {
+      await CareSession.instance.flush();
+    }
   }
 
   Future<void> _confirmRemoveMember(BuildContext context) async {
@@ -91,15 +188,30 @@ class MemberHealthScreen extends StatelessWidget {
     final missedCount = history
         .where((dose) => dose.status == OccurrenceStatus.missed)
         .length;
+    final memberItem = session.members
+        .where((m) => m.id == memberId)
+        .firstOrNull;
+    final currentMemberName = memberItem?.name ?? memberName;
+    final currentRelationship = memberItem?.relationship ?? relationship;
+
     final historyDone = takenCount + missedCount;
     final historyScore = historyDone == 0 ? null : takenCount / historyDone;
-    final initial = memberName.trim().isEmpty
+    final initial = currentMemberName.trim().isEmpty
         ? '?'
-        : memberName.trim()[0].toUpperCase();
+        : currentMemberName.trim()[0].toUpperCase();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Member health'),
         actions: [
+          IconButton(
+            tooltip: 'Edit member profile',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => _showEditMemberDialog(
+              context,
+              currentMemberName,
+              currentRelationship,
+            ),
+          ),
           IconButton(
             tooltip: 'Remove family member',
             onPressed: () => _confirmRemoveMember(context),
@@ -137,7 +249,7 @@ class MemberHealthScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          memberName,
+                          currentMemberName,
                           style: TextStyle(
                             fontSize: 21,
                             fontWeight: FontWeight.w800,
@@ -146,7 +258,7 @@ class MemberHealthScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          '$relationship · Family care',
+                          '$currentRelationship · Family care',
                           style: TextStyle(fontSize: 13, color: AppTheme.muted),
                         ),
                       ],
@@ -508,8 +620,10 @@ class MemberHealthScreen extends StatelessWidget {
             _SectionTile(
               icon: Icons.support_agent_rounded,
               title: 'Care & support',
-              subtitle: 'Caregiver information',
-              onTap: () => _showUnavailable(context),
+              subtitle: 'Troubleshooting & help guides',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CareSupportScreen()),
+              ),
             ),
             const SizedBox(height: 18),
             Center(
@@ -545,15 +659,6 @@ class MemberHealthScreen extends StatelessWidget {
     OccurrenceStatus.upcoming => 'Upcoming',
     OccurrenceStatus.overdue => 'Overdue · unrecorded',
   };
-
-  void _showUnavailable(BuildContext context) =>
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Caregiver sharing is not available in this app version.',
-          ),
-        ),
-      );
 }
 
 class _SummaryCard extends StatelessWidget {
